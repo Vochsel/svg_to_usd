@@ -13,7 +13,6 @@ setuptools.setup(name='svg_to_usd',
                  install_requires=[
                     'usd-core',
                     'matplotlib',
-                    'fontTools',
                  ],
                  license='MIT License',
                  zip_safe=True,
