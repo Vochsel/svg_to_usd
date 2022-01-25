@@ -9,8 +9,9 @@ conversion_options = {
     "convert_polyline": True,
     "convert_text": True,
     "convert_group": True,
+    "convert_line": True,
     "transform_group": False,
-    "fallback_font": "C:/Users/ben/Downloads/Roboto_Condensed/RobotoCondensed-Regular.ttf",
+    "fallback_font": "",
 
     "actual_width": 1,
     "actual_height": 1,

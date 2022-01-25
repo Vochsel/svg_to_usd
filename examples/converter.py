@@ -16,4 +16,4 @@ logging.info("Converting SVG to USD")
 logging.info(f" - input: {_input}")
 logging.info(f" - output: {_output}")
 
-convert.convert(_input, _output)
+convert.convert_new(_input, _output)
