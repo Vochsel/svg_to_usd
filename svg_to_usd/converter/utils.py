@@ -1,8 +1,9 @@
-from pxr import Gf, Usd, UsdGeom, Tf, Sdf
+from pxr import Gf, Usd, UsdGeom, Tf, Sdf, UsdShade
 import re
 import logging
 
 import matplotlib.patches
+from . import common
 
 ELLIPSIS_RES = 32
 UP_AXIS = "Y"
@@ -398,10 +399,22 @@ def handle_geom_attrs(svg_element, usd_mesh):
                 else:
                     svg_fill = el_comp[1]
 
-    usd_colors = [convert_color(svg_fill)]
+    if "url(" in svg_fill:
+        pattern_id = svg_fill.replace('url(#', '')
+        pattern_id = pattern_id.replace(')', '')
 
-    usd_mesh.CreateDisplayColorPrimvar(UsdGeom.Tokens.constant).Set(usd_colors)
-    # usd_mesh.SetDisplayColorInterpolation(UsdGeom.Tokens.constant)
+        image_id = common.pattern_map[pattern_id]
+        usd_material = common.image_map[image_id]
+
+        binding = UsdShade.MaterialBindingAPI.Apply(usd_mesh.GetPrim())
+        if binding:
+            binding.Bind(usd_material)
+    else:
+        usd_colors = [convert_color(svg_fill)]
+
+        usd_mesh.CreateDisplayColorPrimvar(
+            UsdGeom.Tokens.constant).Set(usd_colors)
+        # usd_mesh.SetDisplayColorInterpolation(UsdGeom.Tokens.constant)
 
     # - Normals
 

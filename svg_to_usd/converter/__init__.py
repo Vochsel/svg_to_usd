@@ -10,6 +10,7 @@ conversion_options = {
     "convert_text": True,
     "convert_group": True,
     "convert_line": True,
+    "convert_image": True,
     "transform_group": False,
     "fallback_font": "",
 
@@ -23,4 +24,5 @@ conversion_options = {
 conversion_context = {
     "document_width": 1,
     "document_height": 1,
+    "working_directory": ""
 }

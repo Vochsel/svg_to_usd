@@ -38,9 +38,13 @@ def convert(usd_stage, prim_path, svg_rect):
 
     usd_fvi = [0, 1, 2, 3]
     usd_fvc = [4]
+    usd_uvs = [(0,0), (1, 0), (1,1), (0, 1)]
 
     usd_mesh.CreatePointsAttr().Set(usd_points)
     usd_mesh.CreateFaceVertexIndicesAttr().Set(usd_fvi)
     usd_mesh.CreateFaceVertexCountsAttr().Set(usd_fvc)
+    usd_mesh.CreatePrimvar("st",
+                           Sdf.ValueTypeNames.TexCoord2fArray,
+                           UsdGeom.Tokens.varying).Set(usd_uvs)
 
     return usd_mesh

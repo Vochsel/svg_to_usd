@@ -1,13 +1,35 @@
-from pxr import Usd, UsdGeom, Sdf
+from pxr import Usd, UsdGeom, Sdf, UsdShade
 
 import logging
 
 from . import utils
 from .geometry import rect, circle, ellipse, path, line, text, group, polygon, polyline
+from .fills import image
 from . import conversion_options
 
 # TODO: Handle this better
 parent_map = {}
+
+image_map = {} # image_id -> usd_material
+pattern_map = {} # pattern_id -> image_id
+
+def preprocess_element(usd_stage, svg_element, parent_prim=None):
+
+    svg_id = utils.get_id(svg_element)
+
+    prim_path = "{}".format(svg_id)    
+
+    if "image" in svg_element.tag and conversion_options['convert_image']:
+        prim_path = Sdf.Path("/materials/" + prim_path)
+        usd_material = image.convert(usd_stage, prim_path, svg_element)
+        image_map[svg_id] = usd_material
+
+    if "pattern" in svg_element.tag and conversion_options['convert_image']:
+        if len(svg_element) > 0:
+            if '{http://www.w3.org/1999/xlink}href' in svg_element[0].attrib:
+                image_id = svg_element[0].attrib['{http://www.w3.org/1999/xlink}href']
+                pattern_map[svg_id] = image_id[1:]
+
 
 
 def handle_element(usd_stage, svg_element, parent_prim=None):
@@ -57,7 +79,7 @@ def handle_element(usd_stage, svg_element, parent_prim=None):
         usd_mesh = polyline.convert(usd_stage, prim_path, svg_element)
     if svg_element.tag.rpartition('}')[-1] == "line" and conversion_options['convert_line']:
         usd_mesh = line.convert(usd_stage, prim_path, svg_element)
-    if "text" in svg_element.tag and conversion_options['convert_text']:
+    if svg_element.tag.rpartition('}')[-1] == "text" and conversion_options['convert_text']:
         usd_mesh = text.convert(usd_stage, prim_path, svg_element,
                                 fallback_font=conversion_options['fallback_font'])
     if svg_element.tag.rpartition('}')[-1] == "g" and conversion_options['convert_group']:
@@ -82,6 +104,11 @@ def handle_element(usd_stage, svg_element, parent_prim=None):
 
     return usd_mesh
 
+
+def preprocess_svg_root(stage, root, parent_prim=None):
+    for elem in root:
+        preprocess_element(stage, elem, parent_prim)
+        preprocess_svg_root(stage, elem, None)
 
 def handle_svg_root(stage, root, parent_prim=None):
     for elem in root:
