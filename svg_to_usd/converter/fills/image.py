@@ -11,7 +11,10 @@ def convert(usd_stage, prim_path, svg_image):
         return
 
     img_id = svg_image.attrib['id']
-    img_name = svg_image.attrib['data-name']
+    img_name = 'img_{}'.format(img_id) 
+    if 'data-name' in svg_image.attrib:
+        img_name = svg_image.attrib['data-name']
+
     img_path = conversion_context['texture_directory'] + "/" + img_name
 
     img_data = svg_image.attrib['{http://www.w3.org/1999/xlink}href']
@@ -39,6 +42,9 @@ def convert(usd_stage, prim_path, svg_image):
     uv_reader = UsdShade.Shader.Define(usd_stage, prim_path.AppendChild("uv_reader"))
     uv_reader.CreateIdAttr().Set("UsdPrimvarReader_float2")
     uv_reader.CreateInput("varname", Sdf.ValueTypeNames.Token).Set("st")
+    texture.CreateOutput('result', Sdf.ValueTypeNames.Float2)
+    texture.CreateInput("st", Sdf.ValueTypeNames.Float2).ConnectToSource(
+        uv_reader.ConnectableAPI(), 'result')
 
     preview_surface.CreateInput("diffuseColor", Sdf.ValueTypeNames.Color3f).ConnectToSource(
         texture.ConnectableAPI(), 'rgb')
