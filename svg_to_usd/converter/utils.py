@@ -30,14 +30,20 @@ convert_position = None
 
 
 def convert_position_x(svg_x, svg_y, vec_class=Gf.Vec3f):
+    if not svg_y:
+        svg_y = 0.0
     return vec_class(0, -svg_y, svg_x)
 
 
 def convert_position_y(svg_x, svg_y, vec_class=Gf.Vec3f):
+    if not svg_y:
+        svg_y = 0.0
     return vec_class(svg_x, 0, svg_y)
 
 
 def convert_position_z(svg_x, svg_y, vec_class=Gf.Vec3f):
+    if not svg_y:
+        svg_y = 0.0
     return vec_class(svg_x, -svg_y, 0)
 
 
@@ -151,6 +157,8 @@ def convert_transform_attr(transform_attr, up_axis="Y"):
             _translate = [float(i) for i in _translate.split(',')]
         elif " " in _translate:
             _translate = [float(i) for i in _translate.split(' ')]
+        else:
+            _translate = (float(_translate), float(_translate))
         _v = convert_position(_translate[0], _translate[1], vec_class=Gf.Vec3d)
         _translate_mat = Gf.Matrix4d(1).SetTranslate(_v)
 
@@ -421,6 +429,11 @@ def handle_geom_attrs(svg_element, usd_mesh):
     usd_normals = [default_normal()]
     usd_mesh.CreateNormalsAttr().Set(usd_normals)
     usd_mesh.SetNormalsInterpolation(UsdGeom.Tokens.constant)
+
+    # - Subdivision
+
+    usd_mesh.CreateSubdivisionSchemeAttr().Set(UsdGeom.Tokens.none)
+    usd_mesh.CreateTriangleSubdivisionRuleAttr().Set(UsdGeom.Tokens.none)
 
     # - Arbitrary attributes
 
