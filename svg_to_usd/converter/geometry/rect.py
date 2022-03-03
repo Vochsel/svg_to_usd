@@ -45,6 +45,6 @@ def convert(usd_stage, prim_path, svg_rect):
     usd_mesh.CreateFaceVertexCountsAttr().Set(usd_fvc)
     usd_mesh.CreatePrimvar("st",
                            Sdf.ValueTypeNames.TexCoord2fArray,
-                           UsdGeom.Tokens.varying).Set(usd_uvs)
+                           UsdGeom.Tokens.vertex).Set(usd_uvs)
 
     return usd_mesh
