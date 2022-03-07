@@ -431,7 +431,7 @@ def handle_geom_attrs(svg_element, usd_mesh):
     usd_mesh.SetNormalsInterpolation(UsdGeom.Tokens.constant)
 
     # - Subdivision
-    if usd_mesh.IsA(UsdGeom.Mesh):
+    if usd_mesh.GetPrim().IsA(UsdGeom.Mesh):
         usd_mesh.CreateSubdivisionSchemeAttr().Set(UsdGeom.Tokens.none)
         usd_mesh.CreateTriangleSubdivisionRuleAttr().Set(UsdGeom.Tokens.none)
 
