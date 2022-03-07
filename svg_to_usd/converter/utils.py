@@ -431,9 +431,9 @@ def handle_geom_attrs(svg_element, usd_mesh):
     usd_mesh.SetNormalsInterpolation(UsdGeom.Tokens.constant)
 
     # - Subdivision
-
-    usd_mesh.CreateSubdivisionSchemeAttr().Set(UsdGeom.Tokens.none)
-    usd_mesh.CreateTriangleSubdivisionRuleAttr().Set(UsdGeom.Tokens.none)
+    if usd_mesh.IsA(UsdGeom.Mesh):
+        usd_mesh.CreateSubdivisionSchemeAttr().Set(UsdGeom.Tokens.none)
+        usd_mesh.CreateTriangleSubdivisionRuleAttr().Set(UsdGeom.Tokens.none)
 
     # - Arbitrary attributes
 
