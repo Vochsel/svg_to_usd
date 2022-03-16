@@ -401,22 +401,36 @@ def handle_geom_attrs(svg_element, usd_mesh):
         svg_style = svg_style.split(';')
         for style_el in svg_style:
             el_comp = style_el.split(':')
+            el_comp[0] = el_comp[0].replace(" ", "")
             if el_comp[0] == "fill":
                 if el_comp[1] == "none":
                     return
                 else:
                     svg_fill = el_comp[1]
+            if el_comp[0] == "stroke":
+                if el_comp[1] == "none":
+                    return
+                else:
+                    svg_fill = el_comp[1]
+            elif el_comp[0] == "stroke-width":
+                if usd_mesh.GetPrim().IsA(UsdGeom.Curves):
+                    _width = float(el_comp[1].replace("px", ""))
+                    
+                    usd_widths = [_width]
+                    usd_mesh.CreateWidthsAttr().Set(usd_widths)
+                    usd_mesh.SetWidthsInterpolation(UsdGeom.Tokens.constant)
 
     if "url(" in svg_fill:
         pattern_id = svg_fill.replace('url(#', '')
         pattern_id = pattern_id.replace(')', '')
 
-        image_id = common.pattern_map[pattern_id]
-        usd_material = common.image_map[image_id]
+        if pattern_id in common.pattern_map:
+            image_id = common.pattern_map[pattern_id]
+            usd_material = common.image_map[image_id]
 
-        binding = UsdShade.MaterialBindingAPI.Apply(usd_mesh.GetPrim())
-        if binding:
-            binding.Bind(usd_material)
+            binding = UsdShade.MaterialBindingAPI.Apply(usd_mesh.GetPrim())
+            if binding:
+                binding.Bind(usd_material)
     else:
         usd_colors = [convert_color(svg_fill)]
 
