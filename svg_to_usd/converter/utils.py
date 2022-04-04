@@ -100,6 +100,7 @@ def hex_to_rgb(hex):
 
 def rgb_literal(str):
     _v = str
+    _v = _v.replace(" ", "")
     _v = _v.replace("rgb(", "")
     _v = _v.replace(")", "")
     _v = _v.split(',')
@@ -392,7 +393,9 @@ def handle_geom_attrs(svg_element, usd_mesh):
 
     # - Colors
 
-    svg_fill = "#FFF"
+    # We have to check against none, because on curves, stroke == displayColor, but not on regular shapes...
+    # Could be handled a lot better
+    svg_fill = None
     if 'fill' in svg_element.attrib:
         svg_fill = svg_element.attrib['fill']
 
@@ -407,11 +410,12 @@ def handle_geom_attrs(svg_element, usd_mesh):
                     return
                 else:
                     svg_fill = el_comp[1]
-            if el_comp[0] == "stroke":
+            elif el_comp[0] == "stroke":
                 if el_comp[1] == "none":
                     return
                 else:
-                    svg_fill = el_comp[1]
+                    if not svg_fill:
+                        svg_fill = el_comp[1]
             elif el_comp[0] == "stroke-width":
                 if usd_mesh.GetPrim().IsA(UsdGeom.Curves):
                     _width = float(el_comp[1].replace("px", ""))
@@ -420,29 +424,30 @@ def handle_geom_attrs(svg_element, usd_mesh):
                     usd_mesh.CreateWidthsAttr().Set(usd_widths)
                     usd_mesh.SetWidthsInterpolation(UsdGeom.Tokens.constant)
 
-    if "url(" in svg_fill:
-        pattern_id = svg_fill.replace('url(#', '')
-        pattern_id = pattern_id.replace(')', '')
+    if svg_fill:
+        if "url(" in svg_fill:
+            pattern_id = svg_fill.replace('url(#', '')
+            pattern_id = pattern_id.replace(')', '')
 
-        if pattern_id in common.pattern_map:
-            image_id = common.pattern_map[pattern_id]
-            usd_material = common.image_map[image_id]
+            if pattern_id in common.pattern_map:
+                image_id = common.pattern_map[pattern_id]
+                usd_material = common.image_map[image_id]
 
-            binding = UsdShade.MaterialBindingAPI.Apply(usd_mesh.GetPrim())
-            if binding:
-                binding.Bind(usd_material)
-    else:
-        usd_colors = [convert_color(svg_fill)]
+                binding = UsdShade.MaterialBindingAPI.Apply(usd_mesh.GetPrim())
+                if binding:
+                    binding.Bind(usd_material)
+        else:
+            usd_colors = [convert_color(svg_fill)]
 
-        usd_mesh.CreateDisplayColorPrimvar(
-            UsdGeom.Tokens.constant).Set(usd_colors)
-        # usd_mesh.SetDisplayColorInterpolation(UsdGeom.Tokens.constant)
+            usd_mesh.CreateDisplayColorPrimvar(
+                UsdGeom.Tokens.constant).Set(usd_colors)
+            # usd_mesh.SetDisplayColorInterpolation(UsdGeom.Tokens.constant)
 
     # - Normals
 
     usd_normals = [default_normal()]
     usd_mesh.CreateNormalsAttr().Set(usd_normals)
-    usd_mesh.SetNormalsInterpolation(UsdGeom.Tokens.constant)
+    usd_mesh.SetNormalsInterpolation(UsdGeom.Tokens.uniform)
 
     # - Subdivision
     if usd_mesh.GetPrim().IsA(UsdGeom.Mesh):
