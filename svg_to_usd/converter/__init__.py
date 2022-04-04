@@ -13,6 +13,7 @@ conversion_options = {
     "convert_image": True,
     "transform_group": False,
     "fallback_font": "",
+    "text_type": "schema", # schema(PreliminaryText), geometry(Outline)
 
     "actual_width": 1,
     "actual_height": 1,

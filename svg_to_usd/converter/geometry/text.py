@@ -235,6 +235,73 @@ def find_font_file(query):
     return matches
 
 def convert(usd_stage, prim_path, svg_text, fallback_font):
+
+    # return convert_as_geo(usd_stage, prim_path, svg_text, fallback_font)
+    return convert_as_schema(usd_stage, prim_path, svg_text, fallback_font)
+
+def convert_as_schema(usd_stage, prim_path, svg_text, fallback_font):
+    logging.debug("Creating text: schema")
+    
+    # svg_word = svg_text.text
+    # if not svg_word.strip():
+    #     # Hack to get first span
+    #     svg_word = svg_text[0].text
+
+    # if not svg_word:
+    #     return
+
+    svg_font_family = "Arial" # TODO: Configurable fallback font
+    if 'font-family' in svg_text.attrib:
+        svg_font_family = svg_text.attrib['font-family']
+
+    # TODO: This is probably buggy
+    svg_font_weight = ""
+    if 'font-weight' in svg_text.attrib:
+        svg_font_weight = svg_text.attrib['font-weight'].capitalize()
+        svg_font_family += " " + svg_font_weight
+
+    svg_font_size = 144
+    if 'font-size' in svg_text.attrib:
+        svg_font_size = float(svg_text.attrib['font-size']) * 144
+
+    text_group = usd_stage.DefinePrim(prim_path, "Xform")
+
+    for tspan in svg_text:
+        # tspan
+        svg_word = tspan.text
+
+        # Sometimes tspans can be empty, we skip these
+        if not svg_word:
+            continue
+
+        prim = usd_stage.DefinePrim(text_group.GetPath().AppendChild(Tf.MakeValidIdentifier(svg_word)), "Preliminary_Text")
+        prim.CreateAttribute("content", Sdf.ValueTypeNames.String).Set(svg_word)
+        prim.CreateAttribute("font", Sdf.ValueTypeNames.StringArray).Set([svg_font_family])
+        prim.CreateAttribute("depth", Sdf.ValueTypeNames.Float).Set(0.0)
+        prim.CreateAttribute("horizontalAlignment", Sdf.ValueTypeNames.String).Set("left")
+        prim.CreateAttribute("verticalAlignment", Sdf.ValueTypeNames.String).Set("middle")
+        prim.CreateAttribute("pointSize", Sdf.ValueTypeNames.Float).Set(svg_font_size)
+        prim.CreateAttribute("wrapMode", Sdf.ValueTypeNames.String).Set("flowing")
+        prim.CreateAttribute("width", Sdf.ValueTypeNames.Float).Set(10)
+        prim.CreateAttribute("height", Sdf.ValueTypeNames.Float).Set(10)
+
+
+        try:
+            svg_x = float(tspan.attrib['x'])
+        except:
+            svg_x = 0.0
+        try:
+            svg_y = float(tspan.attrib['y'])
+        except:
+            svg_y = 0.0
+
+        # TODO: These should be xform ops
+        prim.CreateAttribute("x", Sdf.ValueTypeNames.Float).Set(svg_x)
+        prim.CreateAttribute("y", Sdf.ValueTypeNames.Float).Set(svg_y)
+
+    return text_group
+
+def convert_as_geo(usd_stage, prim_path, svg_text, fallback_font):
     logging.debug("Creating text")
 
     usd_mesh = UsdGeom.Mesh.Define(usd_stage, prim_path)
