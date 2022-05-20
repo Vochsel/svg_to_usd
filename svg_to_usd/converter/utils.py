@@ -375,6 +375,10 @@ def handle_xform_attrs(svg_element, usd_xform):
         _matrix = convert_transform_attr(_transform)
         usd_xform.AddTransformOp().Set(_matrix)
 
+    if 'id' in svg_element.attrib:
+        _id = svg_element.attrib['id']
+        usd_xform.GetPrim().CreateAttribute("id", Sdf.ValueTypeNames.String).Set(_id)
+
 
 def handle_geom_attrs(svg_element, usd_mesh):
 

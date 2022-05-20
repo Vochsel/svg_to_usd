@@ -11,7 +11,7 @@ conversion_options = {
     "convert_group": True,
     "convert_line": True,
     "convert_image": True,
-    "transform_group": False,
+    "transform_group": True,
     "fallback_font": "",
     "text_type": "schema", # schema(PreliminaryText), geometry(Outline)
 
