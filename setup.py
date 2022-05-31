@@ -2,7 +2,7 @@ import setuptools
 from svg_to_usd.version import Version
 
 setuptools.setup(name='svg_to_usd',
-                 version=Version('0.1.15').number,
+                 version=Version('0.1.16').number,
                  description="Convert SVG vectors to Pixar's Universal Scene Description",
                  long_description=open('README.md').read().strip(),
                  packages=setuptools.find_packages(),
