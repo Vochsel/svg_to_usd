@@ -258,11 +258,11 @@ def convert_as_schema(usd_stage, prim_path, svg_text, fallback_font):
     svg_font_weight = ""
     if 'font-weight' in svg_text.attrib:
         svg_font_weight = svg_text.attrib['font-weight'].capitalize()
-        svg_font_family += " " + svg_font_weight
+        svg_font_family += "-" + svg_font_weight
 
     svg_font_size = 144
     if 'font-size' in svg_text.attrib:
-        svg_font_size = float(svg_text.attrib['font-size']) * 144
+        svg_font_size = float(svg_text.attrib['font-size']) 
 
     text_group = usd_stage.DefinePrim(prim_path, "Xform")
 
