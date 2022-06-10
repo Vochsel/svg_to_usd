@@ -384,24 +384,25 @@ def handle_geom_attrs(svg_element, usd_mesh):
     handle_xform_attrs(svg_element, usd_mesh)
 
     # - X, Y
-    # TODO: Implement
-    try:
-        svg_x = float(svg_element.attrib['x'])
-    except:
+    if svg_element.tag.rpartition('}')[-1] == "text" or svg_element.tag.rpartition('}')[-1] == "tspan":
+        # TODO: Implement
         try:
-            svg_x = float(svg_element[0].attrib['x'])
+            svg_x = float(svg_element.attrib['x'])
         except:
-            svg_x = 0.0
-    try:
-        svg_y = float(svg_element.attrib['y'])
-    except:
+            try:
+                svg_x = float(svg_element[0].attrib['x'])
+            except:
+                svg_x = 0.0
         try:
-            svg_y = float(svg_element[0].attrib['y'])
+            svg_y = float(svg_element.attrib['y'])
         except:
-            svg_y = 0.0
+            try:
+                svg_y = float(svg_element[0].attrib['y'])
+            except:
+                svg_y = 0.0
 
-    usd_mesh.AddTransformOp(opSuffix="xy").Set(
-        Gf.Matrix4d(1.0).SetTranslate(Gf.Vec3d(svg_x, 0, svg_y)))
+        usd_mesh.AddTransformOp(opSuffix="xy").Set(
+            Gf.Matrix4d(1.0).SetTranslate(Gf.Vec3d(svg_x, 0, svg_y)))
 
     # - Colors
 

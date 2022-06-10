@@ -60,7 +60,7 @@ def handle_element(usd_stage, svg_element, parent_prim=None):
 
     prim_path = "{}".format(svg_id)
     # Adding a text prefix because the return value could be a number.
-    if svg_element.tag.rpartition('}')[-1] == "text":
+    if svg_element.tag.rpartition('}')[-1] == "text" and 'id' not in svg_element.attrib:
         prim_path = "text_{}".format(prim_path)
 
     if parent_prim:
@@ -119,6 +119,5 @@ def preprocess_svg_root(stage, root, parent_prim=None):
 
 def handle_svg_root(stage, root, parent_prim=None):
     for elem in root:
-        print("elem", elem)
         usd_prim = handle_element(stage, elem, parent_prim)
         handle_svg_root(stage, elem, usd_prim)

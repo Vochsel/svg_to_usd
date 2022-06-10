@@ -35,10 +35,6 @@ def convert(svg_path, usd_stage, svg_str=None):
         common.parent_map = {c: p for p in root.getiterator() for c in p} 
     else:
         common.parent_map = {c: p for p in tree.iter() for c in p}
-    print("common parent_map", common.parent_map)
-    print("root", root)
-    print("root attrib", root.attrib)
-    print("usd stage", usd_stage)
 
     # Setup utils
 
