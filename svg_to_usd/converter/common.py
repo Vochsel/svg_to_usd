@@ -1,9 +1,11 @@
 from pxr import Usd, UsdGeom, Sdf, UsdShade
 
 import logging
+import importlib
 
 from . import utils
 from .geometry import rect, circle, ellipse, path, line, text, group, polygon, polyline
+importlib.reload(text)
 from .fills import image
 from . import conversion_options
 
@@ -57,12 +59,16 @@ def handle_element(usd_stage, svg_element, parent_prim=None):
     svg_id = utils.get_id(svg_element)
 
     prim_path = "{}".format(svg_id)
+    # Adding a text prefix because the return value could be a number.
+    if svg_element.tag.rpartition('}')[-1] == "text":
+        prim_path = "text_{}".format(prim_path)
 
     if parent_prim:
         prim_path = parent_prim.GetPath().AppendPath(prim_path)
     else:
         prim_path = Sdf.Path("/" + prim_path)
 
+    logging.debug("Prim path: {}".format(prim_path))
     usd_mesh = None
 
     if "rect" in svg_element.tag and conversion_options['convert_rect']:
@@ -81,7 +87,8 @@ def handle_element(usd_stage, svg_element, parent_prim=None):
         usd_mesh = line.convert(usd_stage, prim_path, svg_element)
     if svg_element.tag.rpartition('}')[-1] == "text" and conversion_options['convert_text']:
         usd_mesh = text.convert(usd_stage, prim_path, svg_element,
-                                fallback_font=conversion_options['fallback_font'])
+                                fallback_font=conversion_options['fallback_font'],
+                                type=conversion_options['text_type'])
     if svg_element.tag.rpartition('}')[-1] == "g" and conversion_options['convert_group']:
         usd_mesh = group.convert(usd_stage, prim_path, svg_element)
 
@@ -112,5 +119,6 @@ def preprocess_svg_root(stage, root, parent_prim=None):
 
 def handle_svg_root(stage, root, parent_prim=None):
     for elem in root:
+        print("elem", elem)
         usd_prim = handle_element(stage, elem, parent_prim)
         handle_svg_root(stage, elem, usd_prim)

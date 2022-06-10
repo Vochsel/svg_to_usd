@@ -17,13 +17,28 @@ def convert_new(svg_path, usd_path):
     return stage
 
 
-def convert(svg_path, usd_stage):
+def convert(svg_path, usd_stage, svg_str=None):
     import xml.etree.ElementTree as ET
+    root = ""
+    if svg_str:
+        root = ET.fromstring(svg_str)
+    else:
+        tree = ET.parse(svg_path)
+        root = tree.getroot()
 
-    tree = ET.parse(svg_path)
-    root = tree.getroot()
+    i = 0
+    for el in root.iter():
+        el.set("tree_id", i)
+        i +=1
 
-    common.parent_map = {c: p for p in tree.iter() for c in p}
+    if svg_str:
+        common.parent_map = {c: p for p in root.getiterator() for c in p} 
+    else:
+        common.parent_map = {c: p for p in tree.iter() for c in p}
+    print("common parent_map", common.parent_map)
+    print("root", root)
+    print("root attrib", root.attrib)
+    print("usd stage", usd_stage)
 
     # Setup utils
 

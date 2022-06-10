@@ -8,18 +8,17 @@ from . import common
 ELLIPSIS_RES = 32
 UP_AXIS = "Y"
 
-ID_COUNT = 0
+# ID_COUNT = 0 
 
 
 def get_id(svg_element):
-    global ID_COUNT
+    # global ID_COUNT
 
     if 'id' in svg_element.attrib:
         return Tf.MakeValidIdentifier(svg_element.attrib['id'])
-
-    ID_COUNT += 1
-
-    return "ob_{}".format(ID_COUNT)
+    else:
+        # ID_COUNT += 1
+        return "ob_{}".format(svg_element.attrib['tree_id'])
 
 
 def default_normal():
@@ -389,11 +388,20 @@ def handle_geom_attrs(svg_element, usd_mesh):
     try:
         svg_x = float(svg_element.attrib['x'])
     except:
-        svg_x = 0.0
+        try:
+            svg_x = float(svg_element[0].attrib['x'])
+        except:
+            svg_x = 0.0
     try:
         svg_y = float(svg_element.attrib['y'])
     except:
-        svg_y = 0.0
+        try:
+            svg_y = float(svg_element[0].attrib['y'])
+        except:
+            svg_y = 0.0
+
+    usd_mesh.AddTransformOp(opSuffix="xy").Set(
+        Gf.Matrix4d(1.0).SetTranslate(Gf.Vec3d(svg_x, 0, svg_y)))
 
     # - Colors
 
@@ -463,7 +471,7 @@ def handle_geom_attrs(svg_element, usd_mesh):
     disallow_list = ["fill", "style", "x", "y",
                      "transform", "d", "x1", "x2", "y1", "y2", "points"]
     # These probably arent useful
-    disallow_list += ["clip_path", "clip_path_id"]
+    disallow_list += ["clip_path", "clip_path_id", "tree_id"]
 
     for _attr in svg_element.attrib:
         if _attr in disallow_list:

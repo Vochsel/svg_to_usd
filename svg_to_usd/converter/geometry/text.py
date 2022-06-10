@@ -1,6 +1,8 @@
 from pxr import Usd, UsdGeom, Tf, Sdf, Gf
 import logging
+import subprocess
 from .. import utils
+from pprint import pprint
 
 import os, sys
 
@@ -225,19 +227,79 @@ def findSystemFonts(fontpaths=None, fontext='ttf'):
     for path in fontpaths:
         fontfiles.update(map(os.path.abspath, list_fonts(path, fontexts)))
 
-    return [fname for fname in fontfiles if os.path.exists(fname)]
+    # print("fontfiles", fontfiles)
+    ft_files = []
+    font_dict = {}
+    for fname in fontfiles:
+        if os.path.exists(fname):
+            # print("fname", fname)
+            if fname.endswith("ttc"):
+                fonts = ttLib.TTCollection(fname)
+                for font in fonts:
+                    name = font['name']
+                    family_name = name.getBestFamilyName()
+                    style = name.getBestSubFamilyName()
+                    if fname not in font_dict.keys():
+                       font_dict[fname] = [{"family": family_name, "style": style}]
+                    else:
+                    # This is going to break because it expects one family name and style per path.
+                        font_dict[fname].append({"family": family_name, "style": style})
+            else:        
+                font = ttLib.TTFont(fname)
+                name = font['name']
+                family_name = name.getBestFamilyName()
+                style = name.getBestSubFamilyName()
+                font_dict[fname] = [{"family": family_name, "style": style}]
+                dir = os.path.dirname(fname)
+                basename = os.path.basename(fname).lower()
+                ft_files.append(os.path.join(dir, basename))
+
+    
+    # ft_files = [os.path.basename(fname).lower() for fname in fontfiles if os.path.exists(fname)] 
+    # pprint(ft_files)
+    # print("font_dict", font_dict) 
+    # return [fname for fname in fontfiles if os.path.exists(fname)]
+    # return ft_files
+    return font_dict
+
+#What would be a better way to create this dictionary once and reuse it?
+font_dict = findSystemFonts()
+
+font_weights = {
+    100: "Hairline",
+    200: "Thin",
+    300: "Light",
+    400: "Normal",
+    500: "Medium",
+    600: "Semibold",
+    700: "Bold",
+    800: "Extrabold",
+    900: "Black"
+}
 
 
+def find_font_file(family, style):
+    print("query", family, style)
 
-
-def find_font_file(query):
-    matches = list(filter(lambda path: query.lower() in os.path.basename(path), findSystemFonts()))
+    # font_dict = findSystemFonts(fontpaths="/Library/Fonts")
+    # font_dict = findSystemFonts()
+    matches = []
+    for key in font_dict:
+        for i in range(len(font_dict[key])):
+        # print("key", key)
+        # print("family", family)
+        # print("style", style)
+            if font_dict[key][i]["family"] == family and font_dict[key][i]["style"] == style:
+                matches.append(key)
+    # matches = list(filter(lambda path: family.lower() in os.path.basename(path), findSystemFonts()))
+    print("matches", matches)
     return matches
 
-def convert(usd_stage, prim_path, svg_text, fallback_font):
-
-    # return convert_as_geo(usd_stage, prim_path, svg_text, fallback_font)
-    return convert_as_schema(usd_stage, prim_path, svg_text, fallback_font)
+def convert(usd_stage, prim_path, svg_text, fallback_font, type):
+    if type == "geometry":
+        return convert_as_geo(usd_stage, prim_path, svg_text, fallback_font)
+    elif type == "schema":
+        return convert_as_schema(usd_stage, prim_path, svg_text, fallback_font)
 
 def convert_as_schema(usd_stage, prim_path, svg_text, fallback_font):
     logging.debug("Creating text: schema")
@@ -265,7 +327,7 @@ def convert_as_schema(usd_stage, prim_path, svg_text, fallback_font):
         svg_font_size = float(svg_text.attrib['font-size']) 
 
     text_group = usd_stage.DefinePrim(prim_path, "Xform")
-
+    logging.debug(svg_text)
     for tspan in svg_text:
         # tspan
         svg_word = tspan.text
@@ -274,7 +336,7 @@ def convert_as_schema(usd_stage, prim_path, svg_text, fallback_font):
         if not svg_word:
             continue
 
-        prim = usd_stage.DefinePrim(text_group.GetPath().AppendChild(Tf.MakeValidIdentifier(svg_word)), "Preliminary_Text")
+        prim = usd_stage.DefinePrim(text_group.GetPath().AppendChild(Tf.MakeValidIdentifier("tspan_{}".format(svg_word))), "Preliminary_Text")
         prim.CreateAttribute("content", Sdf.ValueTypeNames.String).Set(svg_word)
         prim.CreateAttribute("font", Sdf.ValueTypeNames.StringArray).Set([svg_font_family])
         prim.CreateAttribute("depth", Sdf.ValueTypeNames.Float).Set(0.0)
@@ -309,15 +371,16 @@ def convert_as_geo(usd_stage, prim_path, svg_text, fallback_font):
     utils.handle_geom_attrs(svg_text, usd_mesh)
 
     svg_word = svg_text.text
-    print(svg_word)
+    print("svg_word", svg_word)
     
     if not svg_word:
         # Hack to get first span
         svg_word = svg_text[0].text
         for child in svg_text:
-            print(child)
+            print("child element", child)
+            print("child text", child.text)
 
-        print(svg_word)
+        # print(svg_word)
 
     if not svg_word:
         return
@@ -333,19 +396,58 @@ def convert_as_geo(usd_stage, prim_path, svg_text, fallback_font):
 
     if 'font-family' in svg_text.attrib:
         svg_font_family = svg_text.attrib['font-family']
+        svg_font_style = None 
+        svg_font_weight = None
+        if 'font-style' in svg_text.attrib:
+            svg_font_style = svg_text.attrib['font-style'].title()
+        if 'font-weight' in svg_text.attrib:
+            svg_font_weight = svg_text.attrib['font-weight']
+
+        print("family: {}, style: {}, weight: {}".format(svg_font_family, svg_font_style, svg_font_weight))
+        
+        if svg_font_weight == None and svg_font_style == None:
+            svg_font_style = "Regular"
+        elif svg_font_weight and svg_font_style == None:
+            try:
+                svg_font_style = font_weights[int(svg_font_weight)]
+            except:
+                svg_font_style = svg_font_weight.title()
+        elif svg_font_weight and svg_font_style:
+            print("both weight and style")
+            try:
+                svg_font_style = "{} {}".format(font_weights[int(svg_font_weight)], svg_font_style)
+                print("style:", svg_font_style)
+            except:
+                svg_font_style = "{} {}".format(svg_font_weight.title(), svg_font_style)
+                print("style:", svg_font_style) 
 
         if "/" in svg_font_family or "\\" in svg_font_family:
+            print("font_path", svg_font_family)
             font_path = svg_font_family
         else:
-            print(svg_font_family)
-            m = find_font_file(svg_font_family)
-            print(m)
+            print("svg font family, weight, style", svg_font_family, svg_font_style)
+            m = find_font_file(svg_font_family, svg_font_style)
+            print("m", m)
             font_path = m[-1]
 
+    # font_path = "/Library/Fonts/Yahoo Sans-Regular.otf"
+
     try:
-        font = ttLib.TTFont(font_path)
+        font = None
+        if font_path.endswith("ttc"):
+                fonts = ttLib.TTCollection(font_path)
+                for fnt in fonts:
+                    name = fnt['name']
+                    family = name.getBestFamilyName()
+                    style = name.getBestSubFamilyName()
+                    # print("family - style: {}-{}".format(family, style))
+                    if family == svg_font_family and style == svg_font_style:
+                        font = fnt 
+        else:
+            font = ttLib.TTFont(font_path)
         cmap = font['cmap']
-        t = cmap.getcmap(3, 1).cmap
+        # t = cmap.getcmap(3, 1).cmap
+        t = cmap.getBestCmap()
         units_per_em = font['head'].unitsPerEm
 
         gSet = font.getGlyphSet()
@@ -407,7 +509,7 @@ def convert_as_geo(usd_stage, prim_path, svg_text, fallback_font):
         svg_path = parse_path(svg_d)
 
         usd_points, usd_fvi, usd_fvc = utils.path_to_mesh(
-            svg_path, usd_points, usd_fvi, usd_fvc, _charXOffset, 0, 1.0/(units_per_em * 1.33333))
+            svg_path, usd_points, usd_fvi, usd_fvc, _charXOffset, 0, 1.0/(units_per_em))
 
         _charXOffset += glyph.width
 
@@ -416,3 +518,4 @@ def convert_as_geo(usd_stage, prim_path, svg_text, fallback_font):
     usd_mesh.CreateFaceVertexCountsAttr().Set(usd_fvc)
 
     return usd_mesh
+
