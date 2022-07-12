@@ -41,3 +41,6 @@ htmlcov
 __pycache__
 
 output/
+
+# MacOS
+.DS_Store
