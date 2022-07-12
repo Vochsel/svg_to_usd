@@ -485,3 +485,13 @@ def handle_geom_attrs(svg_element, usd_mesh):
                 _attr), _type, UsdGeom.Tokens.constant).Set(_val)
 
     return usd_mesh
+
+def set_extent(prim, bboxCache):
+    # Get bbox
+    bb = bboxCache.ComputeWorldBound(prim)
+    
+    # Get min and max vecs
+    minr = bb.GetRange().GetMin() 
+    maxr = bb.GetRange().GetMax()
+    
+    prim.GetAttribute('extent').Set([minr, maxr]) 
