@@ -1,10 +1,8 @@
 from pxr import Usd
-import importlib
 
 from .converter import common, utils
 from .converter import conversion_context, conversion_options
 
-importlib.reload(common)
 import os
 
 
