@@ -44,3 +44,6 @@ output/
 
 # MacOS
 .DS_Store
+
+# vscode
+.vscode
