@@ -91,7 +91,7 @@ def get_font_properties(element):
             svg_font_weight = int(svg_font_weight)
 
     if "font-size" in element.attrib:
-        svg_font_size = int(element.attrib["font-size"])
+        svg_font_size = int(float(element.attrib["font-size"]))
 
     if "font-style" in element.attrib:
         if element.attrib["font-style"] == "italic":
@@ -321,6 +321,13 @@ def convert_as_geo(usd_stage, prim_path, svg_text, fallback_font):
         logging.error(f"ERROR: {fallback_font} cannot be processed.")
         return 1
 
+
+    # Check if the text element has any children. Most likely <tspan> elements.
+    if len(list(svg_text)) > 1:
+        # Create an xform to hold the tspan elements.
+        text_root = UsdGeom.Xform.Define(usd_stage, prim_path)
+
+
     # Check if the text element has any children. Most likely <tspan> elements.
     if len(list(svg_text)) > 1:
         # Create an xform to hold the tspan elements.
@@ -370,10 +377,11 @@ def convert_as_geo(usd_stage, prim_path, svg_text, fallback_font):
         text_root = UsdGeom.Mesh.Define(usd_stage, prim_path)
 
         utils.handle_geom_attrs(svg_text, text_root)
+        print("svg_text", svg_text.text, len(svg_text))
 
         svg_word = svg_text.text
 
-        if not svg_word:
+        if not svg_word and len(svg_text) > 0:
             # Hack to get first span
             svg_word = svg_text[0].text
 

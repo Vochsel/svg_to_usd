@@ -45,5 +45,6 @@ output/
 # MacOS
 .DS_Store
 
-#vscode settings
+
+# vscode
 .vscode

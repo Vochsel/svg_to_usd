@@ -4,6 +4,7 @@ import logging
 
 from . import utils
 from .geometry import rect, circle, ellipse, path, line, text, group, polygon, polyline
+
 from .fills import image
 from . import conversion_options
 
