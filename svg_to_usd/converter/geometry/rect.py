@@ -9,23 +9,24 @@ def convert(usd_stage, prim_path, svg_rect):
     usd_mesh = UsdGeom.Mesh.Define(usd_stage, prim_path)
 
     utils.handle_geom_attrs(svg_rect, usd_mesh)
+    element_attributes = utils.parse_attributes(svg_rect)
 
     try:
-        svg_x = float(svg_rect.attrib['x'])
+        svg_x = float(element_attributes["x"])
     except:
         svg_x = 0.0
     try:
-        svg_y = float(svg_rect.attrib['y'])
+        svg_y = float(element_attributes["y"])
     except:
         svg_y = 0.0
 
     try:
-        svg_width = float(svg_rect.attrib['width'])
+        svg_width = float(element_attributes["width"])
     except:
         svg_width = 1
 
     try:
-        svg_height = float(svg_rect.attrib['height'])
+        svg_height = float(element_attributes["height"])
     except:
         svg_height = 1
 
@@ -38,13 +39,13 @@ def convert(usd_stage, prim_path, svg_rect):
 
     usd_fvi = [0, 1, 2, 3]
     usd_fvc = [4]
-    usd_uvs = [(0,0), (1, 0), (1,1), (0, 1)]
+    usd_uvs = [(0, 0), (1, 0), (1, 1), (0, 1)]
 
     usd_mesh.CreatePointsAttr().Set(usd_points)
     usd_mesh.CreateFaceVertexIndicesAttr().Set(usd_fvi)
     usd_mesh.CreateFaceVertexCountsAttr().Set(usd_fvc)
-    usd_mesh.CreatePrimvar("st",
-                           Sdf.ValueTypeNames.TexCoord2fArray,
-                           UsdGeom.Tokens.vertex).Set(usd_uvs)
+    usd_mesh.CreatePrimvar(
+        "st", Sdf.ValueTypeNames.TexCoord2fArray, UsdGeom.Tokens.vertex
+    ).Set(usd_uvs)
 
     return usd_mesh

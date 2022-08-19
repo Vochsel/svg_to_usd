@@ -15,20 +15,25 @@ def convert(usd_stage, prim_path, svg_ellipse):
 
     utils.handle_geom_attrs(svg_ellipse, usd_mesh)
 
-    svg_x = float(svg_ellipse.attrib['cx'])
-    svg_y = float(svg_ellipse.attrib['cy'])
-    svg_r = float(svg_ellipse.attrib['r'])
+    element_attributes = utils.parse_attributes(svg_ellipse)
+
+    svg_x = float(element_attributes["cx"])
+    svg_y = float(element_attributes["cy"])
+    svg_r = float(element_attributes["r"])
 
     usd_points = []
     usd_fvi = []
-    usd_fvc = [conversion_options['curve_resolution']]
+    usd_fvc = [conversion_options["curve_resolution"]]
 
     usd_uvs = []
 
-    for i in range(conversion_options['curve_resolution']):
-        iter = (i/conversion_options['curve_resolution']) * PI * 2
-        usd_points.append(utils.convert_position(
-            svg_x - (math.sin(iter) * svg_r), svg_y - (math.cos(iter) * svg_r)))
+    for i in range(conversion_options["curve_resolution"]):
+        iter = (i / conversion_options["curve_resolution"]) * PI * 2
+        usd_points.append(
+            utils.convert_position(
+                svg_x - (math.sin(iter) * svg_r), svg_y - (math.cos(iter) * svg_r)
+            )
+        )
         usd_fvi.append(i)
         usd_uvs.append((math.sin(iter), math.cos(iter)))
 
@@ -36,8 +41,8 @@ def convert(usd_stage, prim_path, svg_ellipse):
     usd_mesh.CreateFaceVertexIndicesAttr().Set(usd_fvi)
     usd_mesh.CreateFaceVertexCountsAttr().Set(usd_fvc)
 
-    usd_mesh.CreatePrimvar("st",
-                           Sdf.ValueTypeNames.TexCoord2fArray,
-                           UsdGeom.Tokens.varying).Set(usd_uvs)
+    usd_mesh.CreatePrimvar(
+        "st", Sdf.ValueTypeNames.TexCoord2fArray, UsdGeom.Tokens.varying
+    ).Set(usd_uvs)
 
     return usd_mesh
