@@ -290,6 +290,7 @@ def convert_as_geo(usd_stage, prim_path, svg_text, fallback_font):
         style = style.strip()
         ft_styles.append(style)
 
+    # TODO Don't forget to add logic to handle url paths
     if "/" in font_props["family"] or "\\" in font_props["family"]:
         print("font_path", font_props["family"])
         font_path = font_props["family"]
@@ -320,16 +321,17 @@ def convert_as_geo(usd_stage, prim_path, svg_text, fallback_font):
         logging.error(f"ERROR: {fallback_font} cannot be processed.")
         return 1
 
+
     # Check if the text element has any children. Most likely <tspan> elements.
     if len(list(svg_text)) > 1:
         # Create an xform to hold the tspan elements.
         text_root = UsdGeom.Xform.Define(usd_stage, prim_path)
 
-        svg_fill = None
-        font_path = ""
-        gSet = None
-        cmap = None
-        t = None
+
+    # Check if the text element has any children. Most likely <tspan> elements.
+    if len(list(svg_text)) > 1:
+        # Create an xform to hold the tspan elements.
+        text_root = UsdGeom.Xform.Define(usd_stage, prim_path)
 
         align = 0
         if "text-anchor" in svg_text.attrib:

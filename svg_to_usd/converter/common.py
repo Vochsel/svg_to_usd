@@ -1,12 +1,10 @@
 from pxr import Usd, UsdGeom, Sdf, UsdShade
 
 import logging
-import importlib
 
 from . import utils
 from .geometry import rect, circle, ellipse, path, line, text, group, polygon, polyline
 
-importlib.reload(text)
 from .fills import image
 from . import conversion_options
 
