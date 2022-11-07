@@ -142,10 +142,15 @@ def convert_transform_attr(transform_attr, up_axis="Y"):
     if rotate_search:
         _rotate = rotate_search.group(0).replace("rotate(", "")
         _rotate = _rotate.replace(")", "")
+        print("_rotate", _rotate)
 
         if "," in _rotate:
             # TODO: Figure out what this means....
             _rotate = [-float(i) for i in _rotate.split(",")]
+            _r = Gf.Rotation(Gf.Vec3d(0, 1, 0), _rotate[0])
+            _rotate_mat = Gf.Matrix4d(1).SetRotate(_r)
+        elif " " in _rotate:
+            _rotate = [-float(i) for i in _rotate.split(" ")]
             _r = Gf.Rotation(Gf.Vec3d(0, 1, 0), _rotate[0])
             _rotate_mat = Gf.Matrix4d(1).SetRotate(_r)
         else:
