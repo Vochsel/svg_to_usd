@@ -1,10 +1,13 @@
 from pxr import Usd, UsdGeom, Sdf, UsdShade
 
 import logging
+import importlib
 
 from . import utils
 from .geometry import rect, circle, ellipse, path, line, text, group, polygon, polyline
 
+importlib.reload(text)
+importlib.reload(line)
 from .fills import image
 from . import conversion_options
 
@@ -39,21 +42,26 @@ def handle_element(usd_stage, svg_element, parent_prim=None):
     if "clipPath" in parent_map[svg_element].tag:
         return
 
+    element_attributes = utils.parse_attributes(svg_element)
+
     _visible = True
 
-    if "fill" in svg_element.attrib:
-        if svg_element.attrib["fill"] == "none":
+    if "fill" in element_attributes:
+        if element_attributes["fill"] == "none":
             _visible = False
-    if "opacity" in svg_element.attrib:
-        if svg_element.attrib["opacity"] == "0":
+    if "opacity" in element_attributes:
+        if element_attributes["opacity"] == "0":
             _visible = False
-    if "style" in svg_element.attrib:
-        if "opacity: 0" in svg_element.attrib["style"]:
+    if "display" in element_attributes:
+        if element_attributes["display"] == "none":
             _visible = False
-        if "fill: none" in svg_element.attrib["style"]:
-            _visible = False
-        if "display: none" in svg_element.attrib["style"]:
-            _visible = False
+    # if "style" in svg_element.attrib:
+    #     if "opacity: 0" in svg_element.attrib["style"]:
+    #         _visible = False
+    #     if "fill: none" in svg_element.attrib["style"]:
+    #         _visible = False
+    #     if "display: none" in svg_element.attrib["style"]:
+    #         _visible = False
 
     svg_id = utils.get_id(svg_element)
 
@@ -110,8 +118,8 @@ def handle_element(usd_stage, svg_element, parent_prim=None):
         return
 
     # TODO: Handle visibility properly
-    if "visibility" in svg_element.attrib:
-        if svg_element.attrib["visibility"] == "hidden":
+    if "visibility" in element_attributes:
+        if element_attributes["visibility"] == "hidden":
             _visible = False
 
     # Author visibility

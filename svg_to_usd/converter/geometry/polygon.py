@@ -8,14 +8,16 @@ from svgpath2mpl import parse_path
 def convert(usd_stage, prim_path, svg_path):
     logging.debug("Creating polygon")
 
-    if 'points' not in svg_path.attrib:
+    element_attributes = utils.parse_attributes(svg_path)
+
+    if "points" not in element_attributes:
         # No path...
         logging.warning("SVG Path processed with no d attribute")
         return None
 
-    _svg_points = svg_path.attrib['points']
-    _svg_points = _svg_points.split(' ')
-    _svg_points = [ i.split(',') for i in _svg_points ]
+    _svg_points = element_attributes["points"]
+    _svg_points = _svg_points.split(" ")
+    _svg_points = [i.split(",") for i in _svg_points]
 
     usd_mesh = UsdGeom.Mesh.Define(usd_stage, prim_path)
 

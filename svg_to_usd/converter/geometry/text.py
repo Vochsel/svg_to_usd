@@ -80,21 +80,23 @@ def get_font_properties(element):
     svg_font_style = 0
     svg_font_size = 144
 
-    if "font-family" in element.attrib:
-        svg_font_family = element.attrib["font-family"]
+    element_attributes = utils.parse_attributes(element)
 
-    if "font-weight" in element.attrib:
-        svg_font_weight = element.attrib["font-weight"].lower()
+    if "font-family" in element_attributes:
+        svg_font_family = element_attributes["font-family"]
+
+    if "font-weight" in element_attributes:
+        svg_font_weight = element_attributes["font-weight"].lower()
         try:
             svg_font_weight = font.WEIGHTS[svg_font_weight]
         except:
             svg_font_weight = int(svg_font_weight)
 
-    if "font-size" in element.attrib:
-        svg_font_size = int(float(element.attrib["font-size"]))
+    if "font-size" in element_attributes:
+        svg_font_size = int(float(element_attributes["font-size"]))
 
-    if "font-style" in element.attrib:
-        if element.attrib["font-style"] == "italic":
+    if "font-style" in element_attributes:
+        if element_attributes["font-style"] == "italic":
             svg_font_style = 2
 
     if svg_font_weight == None:
@@ -173,6 +175,7 @@ def convert_as_schema(usd_stage, prim_path, svg_text, fallback_font):
     logging.debug("Creating text: schema")
 
     font_props = get_font_properties(svg_text)
+    element_attributes = utils.parse_attributes(svg_text)
 
     # initialise the generalised Font Class instance
     svg_font = font.Font(
@@ -197,6 +200,7 @@ def convert_as_schema(usd_stage, prim_path, svg_text, fallback_font):
     logging.debug(svg_text)
     for tspan in svg_text:
         svg_word = " ".join(tspan.text.splitlines())
+        tspan_attributes = utils.parse_attributes(tspan)
 
         # Sometimes tspans can be empty, we skip these
         if not svg_word:
@@ -221,17 +225,17 @@ def convert_as_schema(usd_stage, prim_path, svg_text, fallback_font):
         prim.CreateAttribute("wrapMode", Sdf.ValueTypeNames.String).Set("flowing")
         prim.CreateAttribute("width", Sdf.ValueTypeNames.Float).Set(10)
         prim.CreateAttribute("height", Sdf.ValueTypeNames.Float).Set(10)
-        if "id" in svg_text.attrib:
+        if "id" in element_attributes:
             prim.CreateAttribute("id", Sdf.ValueTypeNames.String).Set(
-                svg_text.attrib["id"]
+                element_attributes["id"]
             )
 
         try:
-            svg_x = float(tspan.attrib["x"])
+            svg_x = float(tspan_attributes["x"])
         except:
             svg_x = 0.0
         try:
-            svg_y = float(tspan.attrib["y"])
+            svg_y = float(tspan_attributes["y"])
         except:
             svg_y = 0.0
 
@@ -261,8 +265,10 @@ def convert_as_geo(usd_stage, prim_path, svg_text, fallback_font):
     t = None
     units_per_em = 2048
 
-    if "fill" in svg_text.attrib:
-        svg_fill = svg_text.attrib["fill"]
+    element_attributes = utils.parse_attributes(svg_text)
+
+    if "fill" in element_attributes:
+        svg_fill = element_attributes["fill"]
 
     # Get the base font properties
     font_props = get_font_properties(svg_text)
@@ -321,12 +327,10 @@ def convert_as_geo(usd_stage, prim_path, svg_text, fallback_font):
         logging.error(f"ERROR: {fallback_font} cannot be processed.")
         return 1
 
-
     # Check if the text element has any children. Most likely <tspan> elements.
     if len(list(svg_text)) > 1:
         # Create an xform to hold the tspan elements.
         text_root = UsdGeom.Xform.Define(usd_stage, prim_path)
-
 
     # Check if the text element has any children. Most likely <tspan> elements.
     if len(list(svg_text)) > 1:
@@ -334,8 +338,8 @@ def convert_as_geo(usd_stage, prim_path, svg_text, fallback_font):
         text_root = UsdGeom.Xform.Define(usd_stage, prim_path)
 
         align = 0
-        if "text-anchor" in svg_text.attrib:
-            svg_text_anchor = svg_text.attrib["text-anchor"]
+        if "text-anchor" in element_attributes:
+            svg_text_anchor = element_attributes["text-anchor"]
             if svg_text_anchor == "middle":
                 align = -2
             elif svg_text_anchor == "end":
@@ -343,6 +347,7 @@ def convert_as_geo(usd_stage, prim_path, svg_text, fallback_font):
 
         for tspan in svg_text:
             svg_word = tspan.text
+            tspan_attributes = utils.parse_attributes(tspan)
 
             # Sometimes tspans can be empty. We skip these
             if not svg_word:
@@ -352,13 +357,13 @@ def convert_as_geo(usd_stage, prim_path, svg_text, fallback_font):
                 usd_stage,
                 text_root.GetPath().AppendChild(
                     Tf.MakeValidIdentifier(
-                        "tspan_{}_{}".format(svg_word, tspan.attrib["tree_id"])
+                        "tspan_{}_{}".format(svg_word, tspan_attributes["tree_id"])
                     )
                 ),
             )
             # add parent fill colour if none exists
-            if "fill" not in tspan.attrib:
-                tspan.attrib["fill"] = svg_fill
+            if "fill" not in tspan_attributes:
+                tspan_attributes["fill"] = svg_fill
 
             utils.handle_geom_attrs(tspan, usd_mesh)
 
@@ -377,7 +382,6 @@ def convert_as_geo(usd_stage, prim_path, svg_text, fallback_font):
         text_root = UsdGeom.Mesh.Define(usd_stage, prim_path)
 
         utils.handle_geom_attrs(svg_text, text_root)
-        print("svg_text", svg_text.text, len(svg_text))
 
         svg_word = svg_text.text
 
@@ -391,8 +395,8 @@ def convert_as_geo(usd_stage, prim_path, svg_text, fallback_font):
         font_path = fallback_font
 
         align = 0
-        if "text-anchor" in svg_text.attrib:
-            svg_text_anchor = svg_text.attrib["text-anchor"]
+        if "text-anchor" in element_attributes:
+            svg_text_anchor = element_attributes["text-anchor"]
             if svg_text_anchor == "middle":
                 align = -2
             elif svg_text_anchor == "end":

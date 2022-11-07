@@ -8,12 +8,14 @@ from svgpath2mpl import parse_path
 def convert(usd_stage, prim_path, svg_path):
     logging.debug("Creating path")
 
-    if 'd' not in svg_path.attrib:
+    element_attributes = utils.parse_attributes(svg_path)
+
+    if "d" not in element_attributes:
         # No path...
         logging.warning("SVG Path processed with no d attribute")
         return None
 
-    svg_d = svg_path.attrib['d']
+    svg_d = element_attributes["d"]
     _path = parse_path(svg_d)
     _is_closed = _path.codes[-1] == _path.CLOSEPOLY
 
@@ -31,7 +33,8 @@ def convert(usd_stage, prim_path, svg_path):
     if _is_closed:
 
         usd_points, usd_fvi, usd_fvc = utils.path_to_mesh(
-            _path, usd_points, usd_fvi, usd_fvc)
+            _path, usd_points, usd_fvi, usd_fvc
+        )
 
         usd_mesh.CreatePointsAttr().Set(usd_points)
         usd_mesh.CreateFaceVertexIndicesAttr().Set(usd_fvi)

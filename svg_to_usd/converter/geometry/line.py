@@ -10,16 +10,17 @@ def convert(usd_stage, prim_path, svg_element):
 
     utils.handle_geom_attrs(svg_element, usd_mesh)
 
-    _x1 = float(svg_element.attrib["x1"]) if "x1" in svg_element.attrib else 0.0
-    _y1 = float(svg_element.attrib["y1"]) if "y1" in svg_element.attrib else 0.0
-    _x2 = float(svg_element.attrib["x2"]) if "x2" in svg_element.attrib else 0.0
-    _y2 = float(svg_element.attrib["y2"]) if "y2" in svg_element.attrib else 0.0
+    element_attributes = utils.parse_attributes(svg_element)
+
+    _x1 = float(element_attributes["x1"]) if "x1" in element_attributes else 0.0
+    _y1 = float(element_attributes["y1"]) if "y1" in element_attributes else 0.0
+    _x2 = float(element_attributes["x2"]) if "x2" in element_attributes else 0.0
+    _y2 = float(element_attributes["y2"]) if "y2" in element_attributes else 0.0
 
     _stroke_width = 1
 
-    if "stroke-width" in svg_element.attrib:
-        _stroke_width = float(svg_element.attrib["stroke-width"])
-        print("_stroke_width", _stroke_width)
+    if "stroke-width" in element_attributes:
+        _stroke_width = float(element_attributes["stroke-width"])
     usd_points = [
         utils.convert_position(_x1, _y1),
         utils.convert_position(_x2, _y2),

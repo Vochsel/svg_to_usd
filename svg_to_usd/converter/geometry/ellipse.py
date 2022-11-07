@@ -14,19 +14,24 @@ def convert(usd_stage, prim_path, svg_ellipse):
 
     utils.handle_geom_attrs(svg_ellipse, usd_mesh)
 
-    svg_x = float(svg_ellipse.attrib['cx'])
-    svg_y = float(svg_ellipse.attrib['cy'])
-    svg_rx = float(svg_ellipse.attrib['rx'])
-    svg_ry = float(svg_ellipse.attrib['ry'])
+    element_attributes = utils.parse_attributes(svg_ellipse)
+
+    svg_x = float(element_attributes["cx"])
+    svg_y = float(element_attributes["cy"])
+    svg_rx = float(element_attributes["rx"])
+    svg_ry = float(element_attributes["ry"])
 
     usd_points = []
     usd_fvi = []
-    usd_fvc = [conversion_options['curve_resolution']]
+    usd_fvc = [conversion_options["curve_resolution"]]
 
-    for i in range(conversion_options['curve_resolution']):
-        iter = (i/conversion_options['curve_resolution']) * PI * 2
-        usd_points.append(utils.convert_position(
-            svg_x - (math.sin(iter) * svg_rx), svg_y - (math.cos(iter) * svg_ry)))
+    for i in range(conversion_options["curve_resolution"]):
+        iter = (i / conversion_options["curve_resolution"]) * PI * 2
+        usd_points.append(
+            utils.convert_position(
+                svg_x - (math.sin(iter) * svg_rx), svg_y - (math.cos(iter) * svg_ry)
+            )
+        )
         usd_fvi.append(i)
 
     usd_mesh.CreatePointsAttr().Set(usd_points)

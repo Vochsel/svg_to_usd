@@ -8,19 +8,22 @@ from svgpath2mpl import parse_path
 def convert(usd_stage, prim_path, svg_path):
     logging.debug("Creating polygon")
 
-    if 'points' not in svg_path.attrib:
+    element_attributes = utils.parse_attributes(svg_path)
+
+    if "points" not in element_attributes:
         # No path...
         logging.warning("SVG Path processed with no d attribute")
         return None
 
-    _svg_points = svg_path.attrib['points']
-    _svg_points = _svg_points.split(' ')
-    _svg_points = [i.split(',') for i in _svg_points]
+    _svg_points = element_attributes["points"]
+    _svg_points = _svg_points.split(" ")
+    _svg_points = [i.split(",") for i in _svg_points]
     # _is_closed = _path.codes[-1] == _path.CLOSEPOLY
     _is_closed = True
 
-    if 'fill' in svg_path.attrib:
-        if svg_path.attrib['fill'] == "none":
+    # TODO: This may no longer work with the introduction of the parse_attributes function.
+    if "fill" in element_attributes:
+        if element_attributes["fill"] == "none":
             _is_closed = False
         else:
             _is_closed = True
@@ -32,12 +35,10 @@ def convert(usd_stage, prim_path, svg_path):
 
     utils.handle_geom_attrs(svg_path, usd_mesh)
 
-    usd_points = [utils.convert_position(
-        float(p[0]), float(p[1])) for p in _svg_points]
-    
+    usd_points = [utils.convert_position(float(p[0]), float(p[1])) for p in _svg_points]
 
     if _is_closed:
-            
+
         usd_fvi = [i for i in range(len(_svg_points))] + [0]
         usd_fvc = [len(_svg_points) + 1]
 
